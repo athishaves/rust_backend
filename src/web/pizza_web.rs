@@ -1,18 +1,19 @@
-use actix_web::{get, post, patch};
 use actix_web::web::{Data, Json, Path};
+use actix_web::{get, patch, post};
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::db::{pizza_data::PizzaDataTrait, Database};
+use crate::db::Database;
+use crate::domain::{pizza_domain::PizzaDomainTrait, DomainService};
 use crate::error::PizzaError;
 use crate::models::{BuyPizzaRequest, Pizza, UpdatePizzaUrl};
 
 #[get("/pizzas")]
 async fn get_pizzas(db: Data<Database>) -> Result<Json<Vec<Pizza>>, PizzaError> {
-  let pizzas = Database::get_all_pizzas(&db).await;
-  match pizzas {
-    Some(found_pizzas) => Ok(Json(found_pizzas)),
-    None => Err(PizzaError::NoPizzasFound),
+  let result = DomainService::get_pizzas(db).await;
+  match result {
+    Ok(pizzas) => Ok(Json(pizzas)),
+    Err(error) => Err(error),
   }
 }
 
@@ -29,12 +30,11 @@ async fn buy_pizza(
       let mut buffer = Uuid::encode_buffer();
       let new_uuid = Uuid::new_v4().simple().encode_lower(&mut buffer);
 
-      let new_pizza =
-        Database::add_pizza(&db, Pizza::new(String::from(new_uuid), pizza_name)).await;
-
-      match new_pizza {
-        Some(created) => Ok(Json(created)),
-        None => Err(PizzaError::PizzaCreationFailure),
+      let result =
+        DomainService::buy_pizza(db, Pizza::new(String::from(new_uuid), pizza_name)).await;
+      match result {
+        Ok(pizza) => Ok(Json(pizza)),
+        Err(error) => Err(error),
       }
     }
     Err(_) => Err(PizzaError::InvalidUserInput),
@@ -47,10 +47,10 @@ async fn update_pizza(
   db: Data<Database>,
 ) -> Result<Json<Pizza>, PizzaError> {
   let uuid = update_pizza_url.into_inner().uuid;
-  let updated_pizza = Database::update_pizza(&db, uuid).await;
 
-  match updated_pizza {
-    Some(updated) => Ok(Json(updated)),
-    None => Err(PizzaError::NoSuchPizzaFound),
+  let result = DomainService::update_pizza(db, uuid).await;
+  match result {
+    Ok(pizza) => Ok(Json(pizza)),
+    Err(error) => Err(error),
   }
 }
