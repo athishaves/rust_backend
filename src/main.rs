@@ -15,6 +15,8 @@ async fn main() -> std::io::Result<()> {
     .expect("error connecting to database");
   let db_data = Data::new(db);
 
+  env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+
   HttpServer::new(move || create_app(db_data.clone()))
     .bind("127.0.0.1:8080")?
     .run()

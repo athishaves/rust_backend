@@ -9,6 +9,7 @@ edition = "2021"
 actix-web = "4.5.1"
 async-trait = "0.1.77"
 derive_more = "0.99.17"
+env_logger = "0.11.1"
 json = "0.12.4"
 serde = { version = "1.0.196", features = ["derive"] }
 surrealdb = "1.1.1"
