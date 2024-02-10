@@ -4,14 +4,14 @@ use uuid::Uuid;
 mod models;
 use crate::models::{BuyPizzaRequest, Pizza, UpdatePizzaUrl};
 mod db;
-use crate::db::Database;
+use crate::db::{pizza_data_trait::PizzaDataTrait, Database};
 mod error;
 use crate::error::PizzaError;
 use validator::Validate;
 
 #[get("/pizzas")]
 async fn get_pizzas(db: Data<Database>) -> Result<Json<Vec<Pizza>>, PizzaError> {
-  let pizzas = db.get_all_pizzas().await;
+  let pizzas = Database::get_all_pizzas(&db).await;
   match pizzas {
     Some(found_pizzas) => Ok(Json(found_pizzas)),
     None => Err(PizzaError::NoPizzasFound),
@@ -31,9 +31,8 @@ async fn buy_pizza(
       let mut buffer = Uuid::encode_buffer();
       let new_uuid = Uuid::new_v4().simple().encode_lower(&mut buffer);
 
-      let new_pizza = db
-        .add_pizza(Pizza::new(String::from(new_uuid), pizza_name))
-        .await;
+      let new_pizza =
+        Database::add_pizza(&db, Pizza::new(String::from(new_uuid), pizza_name)).await;
 
       match new_pizza {
         Some(created) => Ok(Json(created)),
@@ -50,7 +49,7 @@ async fn update_pizza(
   db: Data<Database>,
 ) -> Result<Json<Pizza>, PizzaError> {
   let uuid = update_pizza_url.into_inner().uuid;
-  let updated_pizza = db.update_pizza(uuid).await;
+  let updated_pizza = Database::update_pizza(&db, uuid).await;
 
   match updated_pizza {
     Some(updated) => Ok(Json(updated)),
