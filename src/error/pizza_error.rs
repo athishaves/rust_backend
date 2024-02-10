@@ -11,6 +11,7 @@ pub enum PizzaError {
   PizzaCreationFailure,
   InvalidUserInput,
   NoSuchPizzaFound,
+  DatabaseFailure,
 }
 
 impl ResponseError for PizzaError {
@@ -26,6 +27,7 @@ impl ResponseError for PizzaError {
       PizzaError::PizzaCreationFailure => StatusCode::INTERNAL_SERVER_ERROR,
       PizzaError::InvalidUserInput => StatusCode::BAD_REQUEST,
       PizzaError::NoSuchPizzaFound => StatusCode::NOT_FOUND,
+      PizzaError::DatabaseFailure => StatusCode::INTERNAL_SERVER_ERROR,
     }
   }
 }

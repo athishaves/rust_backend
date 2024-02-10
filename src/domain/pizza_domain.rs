@@ -33,10 +33,16 @@ impl PizzaDomainTrait for DomainService {
   }
 
   async fn update_pizza(db: Data<Database>, uuid: String) -> Result<Pizza, PizzaError> {
-    let updated_pizza = Database::update_pizza(&db, uuid).await;
+    let found = Database::get_pizza(&db, uuid.clone()).await;
 
-    match updated_pizza {
-      Some(updated) => Ok(updated),
+    match found {
+      Some(_) => {
+        let updated_pizza = Database::update_pizza(&db, uuid).await;
+        match updated_pizza {
+          Some(pizza) => Ok(pizza),
+          None => Err(PizzaError::DatabaseFailure),
+        }
+      }
       None => Err(PizzaError::NoSuchPizzaFound),
     }
   }

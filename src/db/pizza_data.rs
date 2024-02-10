@@ -7,6 +7,7 @@ use surrealdb::Error;
 #[async_trait]
 pub trait PizzaDataTrait {
   async fn get_all_pizzas(db: &Data<Database>) -> Option<Vec<Pizza>>;
+  async fn get_pizza(db: &Data<Database>, uuid: String) -> Option<Pizza>;
   async fn add_pizza(db: &Data<Database>, new_pizza: Pizza) -> Option<Pizza>;
   async fn update_pizza(db: &Data<Database>, uuid: String) -> Option<Pizza>;
 }
@@ -33,27 +34,26 @@ impl PizzaDataTrait for Database {
     }
   }
 
-  async fn update_pizza(db: &Data<Database>, uuid: String) -> Option<Pizza> {
-    let find_pizza: Result<Option<Pizza>, Error> = db.client.select(("pizza", &uuid)).await;
+  async fn get_pizza(db: &Data<Database>, uuid: String) -> Option<Pizza> {
+    let result: Result<Option<Pizza>, Error> = db.client.select(("pizza", &uuid)).await;
+    match result {
+      Ok(found) => found,
+      Err(_) => None,
+    }
+  }
 
-    match find_pizza {
-      Ok(found) => match found {
-        Some(_found_pizza) => {
-          let updated_pizza: Result<Option<Pizza>, Error> = db
-            .client
-            .update(("pizza", &uuid))
-            .merge(Pizza {
-              uuid,
-              pizza_name: String::from("sold"),
-            })
-            .await;
-          match updated_pizza {
-            Ok(updated) => updated,
-            Err(_) => None,
-          }
-        }
-        None => None,
-      },
+  async fn update_pizza(db: &Data<Database>, uuid: String) -> Option<Pizza> {
+    let updated_pizza: Result<Option<Pizza>, Error> = db
+      .client
+      .update(("pizza", &uuid))
+      .merge(Pizza {
+        uuid,
+        pizza_name: String::from("sold"),
+      })
+      .await;
+
+    match updated_pizza {
+      Ok(updated) => updated,
       Err(_) => None,
     }
   }
