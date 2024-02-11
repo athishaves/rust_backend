@@ -1,0 +1,27 @@
+version: "1"
+
+volumes:
+  dbdata:
+
+services:
+  db:
+    image: surrealdb/surrealdb:latest
+    container_name: surrealdb
+    restart: always
+    command: start --user root --pass root file:/data/database.db
+    ports:
+      - 8000:8000
+    volumes:
+      - ./dbData/:/data
+
+  server:
+    build:
+      context: .
+      target: final
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+networks:
+  common-net: {}
